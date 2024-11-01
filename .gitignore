@@ -8,3 +8,8 @@ build/*
 _C.*
 outputs/*
 checkpoints/*.pt
+dataset/
+ds_ft*
+*.torch
+wandb
+lightning_logs
