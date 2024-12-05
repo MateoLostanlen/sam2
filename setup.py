@@ -30,6 +30,7 @@ REQUIRED_PACKAGES = [
     "iopath>=0.1.10",
     "pillow>=9.4.0",
     "opencv-python>=4.7.0",
+    "wandb==0.18.5",
 ]
 
 EXTRA_PACKAGES = {
