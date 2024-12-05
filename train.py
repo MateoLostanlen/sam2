@@ -122,7 +122,7 @@ predictor.model.sam_mask_decoder.train(True)  # enable training of mask decoder
 predictor.model.sam_prompt_encoder.train(True)  # enable training of prompt encoder
 
 optimizer = torch.optim.AdamW(params=predictor.model.parameters(), lr=1e-5, weight_decay=4e-5)
-scaler = torch.cuda.amp.GradScaler()  # mixed precision
+scaler = torch.amp.GradScaler('cuda')  # mixed precision
 
 # Training loop
 epochs = 10
@@ -132,7 +132,7 @@ for e in range(epochs):
     metrics = {"seg_loss": [], "score_loss": [], "mean_iou": [], "iou_std": [], "step_time": []}
     for itr, (image, mask, input_point, input_label) in enumerate(train_dataset):
         start_time = time.time()
-        with torch.cuda.amp.autocast():
+        with torch.amp.autocast('cuda'):
             predictor.set_image(image) # apply SAM image encoder to the image
     
             # prompt encoding
@@ -218,9 +218,29 @@ for e in range(epochs):
             iou = inter / (gt_mask.sum() + (prd_mask > 0.5).sum() - inter)
             val_metrics["mean_iou"].append(iou.item())
             val_metrics["seg_loss"].append(seg_loss.item())
+    # Calculate average validation metrics
+    val_mean_iou = np.mean(val_metrics["mean_iou"])
+    val_avg_seg_loss = np.mean(val_metrics["seg_loss"])
+
     wandb.log({
         "epoch": e,
-        "val_mean_iou": np.mean(val_metrics["mean_iou"]),
-        "val_seg_loss": np.mean(val_metrics["seg_loss"]),
+        "val_mean_iou": val_mean_iou,
+        "val_seg_loss": val_avg_seg_loss,
     })
+
+    print(f"Epoch {e} | Validation Mean IoU: {val_mean_iou:.4f} | Validation Loss: {val_avg_seg_loss:.4f}")
+
+    # Save the model checkpoint if this is the best validation loss
+    if val_avg_seg_loss < best_val_loss:
+        best_val_loss = val_avg_seg_loss  # Update best loss
+        model_dict = {"model": predictor.model.state_dict()}
+        checkpoint_path = "best_model.pt"
+        torch.save(model_dict, checkpoint_path)  # Save model checkpoint
+        
+        # Upload checkpoint to W&B as an artifact
+        artifact = wandb.Artifact("best_model", type="model")
+        artifact.add_file(checkpoint_path)
+        wandb.log_artifact(artifact)
+        
+        print(f"Saved and uploaded new best model to W&B at epoch {e} with validation loss {best_val_loss:.4f}.")
     print(f"Epoch {e} | Validation Mean IoU: {np.mean(val_metrics['mean_iou']):.4f} | Validation Loss: {np.mean(val_metrics['seg_loss']):.4f}")
