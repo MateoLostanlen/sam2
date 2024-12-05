@@ -1,12 +1,8 @@
-# Train/Fine-Tune SAM 2 on the LabPics 1 dataset
-
-# This script use a single image batch, if you want to train with multi image per batch check this script:
-# https://github.com/sagieppel/fine-tune-train_segment_anything_2_in_60_lines_of_code/blob/main/TRAIN_multi_image_batch.py
-
-# Toturial: https://medium.com/@sagieppel/train-fine-tune-segment-anything-2-sam-2-in-60-lines-of-code-928dd29a63b3
-# Main repo: https://github.com/facebookresearch/segment-anything-2
-# Labpics Dataset can be downloaded from: https://zenodo.org/records/3697452/files/LabPicsV1.zip?download=1
-# Pretrained models for sam2 Can be downloaded from: https://github.com/facebookresearch/segment-anything-2?tab=readme-ov-file#download-checkpoints
+# Train/Fine-Tune SAM 2 on LabPics Dataset
+# Inspired by the tutorial: 
+# "Train/Fine-Tune Segment Anything 2 (SAM 2) in 60 Lines of Code"
+# Tutorial Link: https://medium.com/@sagieppel/train-fine-tune-segment-anything-2-sam-2-in-60-lines-of-code-928dd29a63b3
+# Original Repository: https://github.com/facebookresearch/segment-anything-2
 
 import wandb
 import numpy as np
@@ -130,6 +126,8 @@ scaler = torch.cuda.amp.GradScaler()  # mixed precision
 
 # Training loop
 epochs = 10
+# Initialize variables to track the best validation loss
+best_val_loss = float("inf")  # Set to infinity initially
 for e in range(epochs):
     metrics = {"seg_loss": [], "score_loss": [], "mean_iou": [], "iou_std": [], "step_time": []}
     for itr, (image, mask, input_point, input_label) in enumerate(train_dataset):
