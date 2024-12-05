@@ -1,4 +1,4 @@
-# Train/Fine-Tune SAM 2 on LabPics Dataset
+# Train/Fine-Tune SAM 2 on smokeseg Dataset
 # Inspired by the tutorial: 
 # "Train/Fine-Tune Segment Anything 2 (SAM 2) in 60 Lines of Code"
 # Tutorial Link: https://medium.com/@sagieppel/train-fine-tune-segment-anything-2-sam-2-in-60-lines-of-code-928dd29a63b3
@@ -25,7 +25,7 @@ import glob
 import random
 
 # Function to Load Data
-def load_labpics_data(ds_path):
+def load_smokeseg_data(ds_path):
     imgs = glob.glob(ds_path)
     random.seed(13)
     random.shuffle(imgs)
@@ -39,10 +39,10 @@ def load_labpics_data(ds_path):
     return data
 
 
-class LabPicsDataset(Dataset):
+class SmokeSegDataset(Dataset):
     def __init__(self, ds_path, train=True, img_size=1024, transform=None, threshold=127):
         """
-        Custom PyTorch Dataset for loading LabPics images and binary annotations.
+        Custom PyTorch Dataset for loading smokeseg images and binary annotations.
         
         Args:
             ds_path (str): Path to the dataset.
@@ -51,7 +51,7 @@ class LabPicsDataset(Dataset):
             transform (callable, optional): Optional transform to apply to images and masks.
             threshold (int): Threshold value for binarizing the annotation mask.
         """
-        self.data = load_labpics_data(ds_path)
+        self.data = load_smokeseg_data(ds_path)
         self.img_size = img_size
         self.transform = transform
         self.threshold = threshold
@@ -104,11 +104,11 @@ class LabPicsDataset(Dataset):
 
 
 # Initialize wandb
-wandb.init(project="sam2-labpics", name="fine-tune-sam2", config={"learning_rate": 1e-5, "batch_size": 1})
+wandb.init(project="sam2-smokeseg", name="fine-tune-sam2", config={"learning_rate": 1e-5, "batch_size": 1})
 
 # Load dataset
-train_dataset = LabPicsDataset("../ds_ft_sam2_v2/train/images/*")
-val_dataset = LabPicsDataset("../ds_ft_sam2_v2/val/images/*")
+train_dataset = SmokeSegDataset("../ds_ft_sam2_v2/train/images/*")
+val_dataset = SmokeSegDataset("../ds_ft_sam2_v2/val/images/*")
 
 
 # Load model
